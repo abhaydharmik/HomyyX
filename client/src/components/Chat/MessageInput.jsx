@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useChat } from "../../context/ChatContext";
+import { socket } from "../../services/socket";
 
 const MessageInput = () => {
   const [text, setText] = useState("")
@@ -8,7 +9,14 @@ const MessageInput = () => {
   const handleSend = () => {
     if(!text.trim()) return
 
-    addMessage({text, self: true})
+    const message = {
+      text,
+      time: new Date().toLocaleDateString()
+    }
+
+    socket.emit("send_message", message)
+
+    addMessage({...message, self: true})
     setText("")
   }
 
