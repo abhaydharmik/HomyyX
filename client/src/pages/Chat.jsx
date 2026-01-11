@@ -11,7 +11,7 @@ const Chat = () => {
 
   return (
     <div className='h-screen flex bg-gray-100 dark:bg-gray-900'>
-        {/* Sidebar */}
+        {/* Sidebar */}x
        <div className="w-64 hidden md:block">
         <Sidebar />
        </div>

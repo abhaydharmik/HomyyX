@@ -9,6 +9,7 @@ export const ChatProvider = ({children}) => {
 
     const [messages, setMessages] = useState([])
     const [username, setUsername] = useState("yourname")
+    const [typingUser, setTypingUser] = useState("")
 
     useEffect(() => {
 
@@ -37,7 +38,7 @@ export const ChatProvider = ({children}) => {
     
 
     return(
-        <ChatContext.Provider value={{messages, addMessage, username, saveUsername, clearUsername}}>
+        <ChatContext.Provider value={{messages, addMessage, username, saveUsername, clearUsername, typingUser, setTypingUser}}>
             {children}
         </ChatContext.Provider>
     )

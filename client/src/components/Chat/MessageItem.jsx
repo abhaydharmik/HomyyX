@@ -22,7 +22,7 @@ const MessageItem = ({ message }) => {
         }`}
       >
         {!message.self && (
-          <p className="text-xs font-semibold mb-1">
+          <p className="text-xs text-blue-500 font-semibold mb-1">
             {message.username || "unknown"}
           </p>
         )}

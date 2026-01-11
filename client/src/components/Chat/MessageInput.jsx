@@ -2,9 +2,23 @@ import React, { useState } from "react";
 import { useChat } from "../../context/ChatContext";
 import { socket } from "../../services/socket";
 
+let typingTimout
+
 const MessageInput = () => {
   const [text, setText] = useState("");
   const { addMessage, username } = useChat();
+
+  const handleChange = (e) => {
+    setText(e.target.value)
+    
+    socket.emit("typing")
+    
+    clearTimeout(typingTimout)
+    typingTimout =  setTimeout(() => {
+      socket.emit("stop_typing")
+    }, 1000);
+
+  }
 
   const handleSend = () => {
     if (!text.trim()) return;
@@ -16,6 +30,7 @@ const MessageInput = () => {
     };
 
     socket.emit("send_message", message);
+    socket.emit("stop_typing");
 
     addMessage({ ...message, self: true });
     setText("");
@@ -26,9 +41,7 @@ const MessageInput = () => {
       <input
         type="text"
         value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-        }}
+        onChange={handleChange}
         placeholder="Type a message..."
         className="flex-1 px-4 py-2 rounded-full border dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:outline-none"
       />

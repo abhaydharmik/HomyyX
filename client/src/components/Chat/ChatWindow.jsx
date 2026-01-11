@@ -1,8 +1,12 @@
 import React from "react";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
+import { useChat } from "../../context/ChatContext";
 
 const ChatWindow = () => {
+
+  const {typingUser} = useChat()
+
   return (
     <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Chat Header */}
@@ -13,6 +17,11 @@ const ChatWindow = () => {
 
       {/* Messages */}
       <MessageList />
+
+      {/* Typing Indicator */}
+      {typingUser && (
+        <p className="px-4 py-4 text-sm italic text-gray-500">{typingUser} is typing....</p>
+      )}
 
       {/* Input */}
       <MessageInput />

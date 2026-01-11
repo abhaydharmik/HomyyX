@@ -20,6 +20,25 @@ module.exports = (io) => {
       socket.broadcast.emit("receive_message", message);
     });
 
+    //Typing Indicator
+    socket.on("typing", ()=> {
+      if(!socket.username) return
+
+      socket.broadcast.emit("user_typing", {
+        username: socket.username
+      })
+    })
+    
+    socket.on("stop_typing", ()=> {
+      if(!socket.username) return
+
+      socket.broadcast.emit("user_stop_typing", {
+        username: socket.username
+      })
+    })
+
+  
+
     // User Disconects
     socket.on("disconnect", () => {
       if (socket.username) {

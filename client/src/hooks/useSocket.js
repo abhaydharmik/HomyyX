@@ -4,7 +4,7 @@ import { socket } from '../services/socket'
 
 const useSocket = () => {
 
-    const {addMessage, username}= useChat()
+    const {addMessage, username, setTypingUser}= useChat()
     const connectedRef = useRef(false)
   
     useEffect(() => {
@@ -22,6 +22,15 @@ const useSocket = () => {
             addMessage({...message, self: false})
         })
 
+        socket.on("user_typing", ({username})=> {
+          setTypingUser(username)
+        })
+
+        socket.on("user_stop_typing", ()=> {
+          setTypingUser("")
+        })
+
+        
       return () => {
         socket.off("receive_message")
         socket.disconnect()
