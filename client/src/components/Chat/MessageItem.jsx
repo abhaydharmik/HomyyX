@@ -1,5 +1,17 @@
 const MessageItem = ({ message }) => {
   console.log(message)
+
+  // System Message (join/leave)
+  if(message.type === "system"){
+    return (
+      <div className="text-center my-2">
+        <span className="text-xs text-gray-500 italic">
+          {message.text} • {message.time}
+        </span>
+      </div>
+    )
+  }
+
   return (
     <div className={`flex ${message.self ? "justify-end" : "justify-start"}`}>
       <div

@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useChat } from "../context/ChatContext";
 const Login = () => {
   const [name, setName] = useState("");
-  const { setUsername } = useChat();
+  const { saveUsername } = useChat();
   const navigate = useNavigate();
 
   const handleEnter = () => {
     if (!name.trim()) return;
-    setUsername(name);
+    saveUsername(name);
     navigate("/chat");
   };
 
