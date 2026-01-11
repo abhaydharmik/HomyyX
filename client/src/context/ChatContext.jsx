@@ -5,13 +5,14 @@ const ChatContext = createContext()
 export const ChatProvider = ({children}) => {
 
     const [messages, setMessages] = useState([])
+    const [username, setUsername] = useState("yourname")
 
     const addMessage = (message)=> {
         setMessages((prev)=> [...prev, message])
     }
 
     return(
-        <ChatContext.Provider value={{messages, addMessage}}>
+        <ChatContext.Provider value={{messages, addMessage, username, setUsername}}>
             {children}
         </ChatContext.Provider>
     )
