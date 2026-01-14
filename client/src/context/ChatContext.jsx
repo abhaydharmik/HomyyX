@@ -36,15 +36,27 @@ export const ChatProvider = ({ children }) => {
           }))
         );
       } catch (error) {
-        console.log("Failed to load messages:",error)
+        console.log("Failed to load messages:", error);
       }
     };
 
-    loadMessages()
+    loadMessages();
   }, [username]);
 
   const addMessage = (message) => {
-    setMessages((prev) => [...prev, message]);
+    setMessages((prev) => {
+      //prevent duplicate system messages
+      if (
+        message.type === "system" &&
+        prev.length > 0 &&
+        prev[prev.length - 1].type === "system" &&
+        prev[prev.length - 1].text === message.text
+      ) {
+        return prev;
+      }
+
+      return [...prev];
+    });
   };
 
   const saveUsername = (name) => {

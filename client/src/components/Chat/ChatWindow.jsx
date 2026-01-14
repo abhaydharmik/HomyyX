@@ -8,7 +8,7 @@ const ChatWindow = () => {
   const {typingUser} = useChat()
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Chat Header */}
       <div className="p-4 border-b dark:border-gray-700">
         <h3 className="font-semibold dark:text-white">HommyX Group</h3>

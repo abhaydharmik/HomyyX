@@ -4,8 +4,8 @@ const MessageItem = ({ message }) => {
   // System Message (join/leave)
   if(message.type === "system"){
     return (
-      <div className="text-center my-2">
-        <span className="text-xs text-gray-500 italic">
+      <div className="flex justify-center text-center my-2">
+        <span className="text-xs text-gray-400 bg-black/20 px-3 py-1 rounded-full italic">
           {message.text} • {message.time}
         </span>
       </div>
