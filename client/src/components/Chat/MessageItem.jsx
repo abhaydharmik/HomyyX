@@ -28,7 +28,7 @@ const MessageItem = ({ message }) => {
         )}
 
         <p className="text-sm">{message.text}</p>
-        <span className="text-[10px] opacity-60">{message.time}</span>
+        <span className="text-[10px] opacity-60">{message.time || ""}</span>
       </div>
     </div>
   );

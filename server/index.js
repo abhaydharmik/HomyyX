@@ -1,8 +1,8 @@
+require("dotenv").config()
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require('cors');
-const { socket } = require("../client/src/services/socket");
 const chatSocket = require("./sockets/chat.socket")
 
 const app = express();
@@ -10,6 +10,10 @@ const app = express();
 // Middleware
 app.use(cors())
 app.use(express.json())
+
+// Register Route
+const messageRoutes = require("./routes/message.routes")
+app.use("/api/messages", messageRoutes)
 
 // Create HTTP Server
 const server = http.createServer(app)
@@ -30,3 +34,8 @@ const PORT = 5000
 server.listen(PORT, ()=>{
     console.log(`Server running at http://localhost:${PORT}`)
 })
+
+// Connect MongoDB
+const connectDB = require("./config/db")
+connectDB()
+
