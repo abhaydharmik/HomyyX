@@ -9,6 +9,7 @@ export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
   const [typingUser, setTypingUser] = useState("");
+  const [room, setRoom] = useState("general")
 
   //Load Username
   useEffect(() => {
@@ -25,7 +26,7 @@ export const ChatProvider = ({ children }) => {
 
     const loadMessages = async () => {
       try {
-        const data = await fetchMessages();
+        const data = await fetchMessages(room);
         setMessages(
           data.map((msg) => ({
             text: msg.text,
@@ -41,7 +42,7 @@ export const ChatProvider = ({ children }) => {
     };
 
     loadMessages();
-  }, [username]);
+  }, [room, username]);
 
   const addMessage = (message) => {
     setMessages((prev) => {
@@ -55,7 +56,7 @@ export const ChatProvider = ({ children }) => {
         return prev;
       }
 
-      return [...prev];
+      return [...prev, message];
     });
   };
 
@@ -79,6 +80,8 @@ export const ChatProvider = ({ children }) => {
         clearUsername,
         typingUser,
         setTypingUser,
+        room,
+        setRoom,
       }}
     >
       {children}

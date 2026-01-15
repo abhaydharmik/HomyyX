@@ -1,4 +1,4 @@
-const Message = require("../models/Message")
+const Message = require("../models/Message");
 
 // Socket Connection
 module.exports = (io) => {
@@ -6,34 +6,37 @@ module.exports = (io) => {
     console.log("User Connected:", socket.id);
 
     // Save Brodcast System
-    const saveAndBroadcastSystem = async(text)=>{
+    const saveAndBroadcastSystem = async (text) => {
       const msg = {
         type: "system",
         text,
-        time: new Date().toLocaleTimeString()
-      }
+        time: new Date().toLocaleTimeString(),
+        room: socket.roomId,
+      };
 
       try {
         await Message.create({
           username: "system",
           text: text,
           type: "system",
-        })
+          room: socket.roomId,
+        });
 
-        socket.broadcast.emit("receive_message", msg)
-
+        socket.to(socket.roomId).emit("receive_message", msg);
       } catch (err) {
-        console.log("System message error:",err)
+        console.log("System message error:", err);
       }
+    };
 
-    }
-
-    //User joins with "username"
-    socket.on("join_chat", async (username) => {
-      if (socket.username) return;
+    // JOIN ROOM  (group or private)
+    socket.on("join_room", async ({ username, roomId }) => {
+      // if (socket.username) return;
       socket.username = username;
+      socket.roomId = roomId;
 
-      await saveAndBroadcastSystem(`${username} joined the chat`)
+      socket.join(roomId);
+
+      await saveAndBroadcastSystem(`${username} joined the chat`);
     });
 
     // Send Messages
@@ -43,35 +46,35 @@ module.exports = (io) => {
           username: message.username,
           text: message.text,
           type: "user",
-        })
+          room: message.roomId,
+        });
 
-        socket.broadcast.emit("receive_message", message);
+        socket.to(message.roomId).emit("receive_message", message);
       } catch (err) {
-        console.error("Message save error:", err)
+        console.error("Message save error:", err);
       }
     });
 
     //Typing Indicator
-    socket.on("typing", ()=> {
-      if(!socket.username) return
+    socket.on("typing", () => {
+      if (!socket.username || !socket.roomId) return;
 
-      socket.broadcast.emit("user_typing", {
-        username: socket.username
-      })
-    })
-    
-    socket.on("stop_typing", ()=> {
-      if(!socket.username) return
+      socket.to(socket.roomId).emit("user_typing", {
+        username: socket.username,
+      });
+    });
 
-      socket.broadcast.emit("user_stop_typing")
-    })
+    socket.on("stop_typing", () => {
+      if (!socket.username || !socket.roomId) return;
+
+      socket.to(socket.roomId).emit("user_stop_typing");
+    });
 
     // User Disconects
-    socket.on("disconnect", async() => {
-      if (!socket.username) return
-        
-        await saveAndBroadcastSystem(`${socket.username} left the chat`)
-      
+    socket.on("disconnect", async () => {
+      if (!socket.username || !socket.roomId) return;
+
+      await saveAndBroadcastSystem(`${socket.username} left the chat`);
 
       console.log("User Disconnected:", socket.id);
     });

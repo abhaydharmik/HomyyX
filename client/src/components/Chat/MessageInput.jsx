@@ -6,10 +6,12 @@ let typingTimout
 
 const MessageInput = () => {
   const [text, setText] = useState("");
-  const { addMessage, username } = useChat();
+  const { addMessage, username, room } = useChat();
 
   const handleChange = (e) => {
     setText(e.target.value)
+
+    if(!room) return
     
     socket.emit("typing")
     
@@ -21,11 +23,12 @@ const MessageInput = () => {
   }
 
   const handleSend = () => {
-    if (!text.trim()) return;
+    if (!text.trim() || !room) return;
 
     const message = {
       text,
       username,
+      roomId: room,
       time: new Date().toLocaleTimeString(),
     };
 
