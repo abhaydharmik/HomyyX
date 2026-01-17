@@ -1,29 +1,33 @@
-import React from 'react'
-import Sidebar from "../components/Sidebar/UserList"
-import ChatWindow from "../components/Chat/ChatWindow"
-import Header from '../components/Common/Header'
-import useSocket from '../hooks/useSocket'
+import React, { useEffect } from "react";
+import Sidebar from "../components/Sidebar/UserList";
+import ChatWindow from "../components/Chat/ChatWindow";
+import useSocket from "../hooks/useSocket";
+import { useChat } from "../context/ChatContext";
+import { useNavigate } from "react-router-dom";
 
 const Chat = () => {
+  const { username } = useChat();
+  const navigate = useNavigate();
 
-  // Socket Activated 
-  useSocket()
+  useEffect(() => {
+    if (!username) navigate("/");
+  }, [username]);
+
+  useSocket();
 
   return (
-    <div className='h-screen flex bg-gray-100 dark:bg-gray-900'>
-        {/* Sidebar */}
-       <div className="w-64 hidden md:block">
+    <div className="h-screen flex bg-gray-100 dark:bg-gray-900">
+      {/* Sidebar */}
+      <div className="hidden md:block">
         <Sidebar />
-       </div>
+      </div>
 
-       {/* Chat Area */}
-
-       <div className="flex-1 flex flex-col">
-        {/* <Header /> */}
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col">
         <ChatWindow />
-       </div>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Chat
+export default Chat;

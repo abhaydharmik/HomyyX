@@ -3,34 +3,36 @@ import { useChat } from "../context/ChatContext";
 import { socket } from "../services/socket";
 
 const useSocket = () => {
-  const { addMessage, username, setTypingUser, room } = useChat();
-  const joinedRef = useRef(false);
+  const {
+    addMessage,
+    username,
+    setTypingUser,
+    room,
+    setOnlineUsers,
+  } = useChat();
 
+  const connectedRef = useRef(false);
+  const currentRoomRef = useRef(null);
+
+  /* 🔌 CONNECT SOCKET ONCE */
   useEffect(() => {
-    if (!username || !room || joinedRef.current) return;
+    if (!username || connectedRef.current) return;
 
-    joinedRef.current = true;
-
-    //connect socket
     socket.connect();
+    connectedRef.current = true;
 
-    // Notify server user joined
-    socket.emit("join_room", { username, roomId: room });
+    socket.emit("user_online", username);
 
-    // socket.on("receive_message", (message) => {
-    //   addMessage({ ...message, self: false });
-    // });
+    socket.off("online_users");
+    socket.off("receive_message");
+    socket.off("user_typing");
+    socket.off("user_stop_typing");
 
-    socket.off("receive_message")
-    socket.off("user_typing")
-    socket.off("user_stop_typing")
-    
-    
+    socket.on("online_users", setOnlineUsers);
+
     socket.on("receive_message", (message) => {
-      // console.log("Socket Message Received:", message)
       addMessage({ ...message, self: false });
     });
-    
 
     socket.on("user_typing", ({ username }) => {
       setTypingUser(username);
@@ -39,16 +41,35 @@ const useSocket = () => {
     socket.on("user_stop_typing", () => {
       setTypingUser("");
     });
+  }, [username]);
 
-      joinedRef.current = false
-  }, [username, room]);
+  /* 🚪 JOIN / SWITCH ROOM (FIXED) */
+  useEffect(() => {
+    if (!room || !username) return;
 
+    // 🔒 PREVENT JOINING SAME ROOM TWICE
+    if (currentRoomRef.current === room) return;
+
+    // leave previous room
+    if (currentRoomRef.current) {
+      socket.emit("leave_room", currentRoomRef.current);
+    }
+
+    socket.emit("join_room", {
+      username,
+      roomId: room,
+    });
+
+    currentRoomRef.current = room;
+  }, [room, username]);
+
+  /* ❌ DISCONNECT ONLY ON UNMOUNT */
   useEffect(() => {
     return () => {
-      socket.disconnect()
-    }
-  }, [])
-  
+      socket.disconnect();
+      connectedRef.current = false;
+    };
+  }, []);
 };
 
 export default useSocket;

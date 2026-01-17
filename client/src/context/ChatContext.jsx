@@ -2,27 +2,29 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { fetchMessages } from "../services/api";
 
 const ChatContext = createContext();
-
 const USERNAME_KEY = "homyyx_username";
 
 export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
   const [typingUser, setTypingUser] = useState("");
-  const [room, setRoom] = useState("general")
+  const [room, setRoom] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
-  //Load Username
+  /* 🔐 Load username */
   useEffect(() => {
     const storedUser = localStorage.getItem(USERNAME_KEY);
-
-    if (storedUser) {
-      setUsername(storedUser);
-    }
+    if (storedUser) setUsername(storedUser);
   }, []);
 
-  // Load Old Messsages(DB)
+  /* 🔥 Clear messages when switching rooms */
   useEffect(() => {
-    if (!username) return;
+    setMessages([]);
+  }, [room]);
+
+  /* 📥 Load messages from DB (room-based) */
+  useEffect(() => {
+    if (!username || !room) return;
 
     const loadMessages = async () => {
       try {
@@ -32,8 +34,10 @@ export const ChatProvider = ({ children }) => {
             text: msg.text,
             username: msg.username,
             type: msg.type,
+            actor: msg.actor, // 🔥 IMPORTANT
             time: new Date(msg.createdAt).toLocaleTimeString(),
             self: msg.username === username,
+            roomId: room,
           }))
         );
       } catch (error) {
@@ -44,14 +48,26 @@ export const ChatProvider = ({ children }) => {
     loadMessages();
   }, [room, username]);
 
+  /* ➕ Add message (SOCKET SAFE) */
   const addMessage = (message) => {
     setMessages((prev) => {
-      //prevent duplicate system messages
+      // 🔥 Ignore system messages triggered by self
       if (
         message.type === "system" &&
-        prev.length > 0 &&
-        prev[prev.length - 1].type === "system" &&
-        prev[prev.length - 1].text === message.text
+        message.actor === username
+      ) {
+        return prev;
+      }
+
+      // 🔁 Prevent duplicate system messages (socket + DB)
+      if (
+        message.type === "system" &&
+        prev.some(
+          (m) =>
+            m.type === "system" &&
+            m.text === message.text &&
+            m.actor === message.actor
+        )
       ) {
         return prev;
       }
@@ -60,13 +76,17 @@ export const ChatProvider = ({ children }) => {
     });
   };
 
+  /* 💾 Save username */
   const saveUsername = (name) => {
     setUsername(name);
     localStorage.setItem(USERNAME_KEY, name);
   };
 
+  /* 🚪 Logout / Clear state */
   const clearUsername = () => {
     setUsername("");
+    setRoom(null);
+    setMessages([]);
     localStorage.removeItem(USERNAME_KEY);
   };
 
@@ -82,6 +102,8 @@ export const ChatProvider = ({ children }) => {
         setTypingUser,
         room,
         setRoom,
+        onlineUsers,
+        setOnlineUsers,
       }}
     >
       {children}

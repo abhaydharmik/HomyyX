@@ -6,23 +6,39 @@ const MessageList = () => {
   const { messages } = useChat();
   const bottomRef = useRef(null);
 
+  // 🔽 Auto scroll
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    });
   }, [messages]);
 
-  const systemMessages = messages.filter((m) => m.type === "system").slice(-5);
+  // 🔥 Show only last 5 system messages
+  const systemMessages = messages
+    .filter((m) => m.type === "system")
+    .slice(-5);
 
   return (
     <div className="flex-1 p-4 overflow-y-auto space-y-2">
       {messages.length === 0 ? (
         <p className="text-center text-gray-400">No messages yet</p>
       ) : (
-        messages.map((msg, i) => {
-          if (msg.type === "system" && !systemMessages.includes(msg)) {
+        messages.map((msg) => {
+          if (
+            msg.type === "system" &&
+            !systemMessages.some(
+              (s) => s.text === msg.text && s.time === msg.time
+            )
+          ) {
             return null;
           }
 
-          return <MessageItem key={i} message={msg} />;
+          return (
+            <MessageItem
+              key={`${msg.time}-${msg.username}-${msg.text}`}
+              message={msg}
+            />
+          );
         })
       )}
       <div ref={bottomRef} />

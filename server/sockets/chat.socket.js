@@ -1,81 +1,85 @@
 const Message = require("../models/Message");
 
-// Socket Connection
+// socket.id -> username
+const onlineUsers = new Map();
+// socket.id -> Set of rooms already joined
+const joinedRooms = new Map();
+
 module.exports = (io) => {
   io.on("connection", (socket) => {
     console.log("User Connected:", socket.id);
 
-    // Save Brodcast System
-    const saveAndBroadcastSystem = async (text) => {
-      const msg = {
-        type: "system",
-        text,
-        time: new Date().toLocaleTimeString(),
-        room: socket.roomId,
-      };
-
-      try {
-        await Message.create({
-          username: "system",
-          text: text,
-          type: "system",
-          room: socket.roomId,
-        });
-
-        socket.to(socket.roomId).emit("receive_message", msg);
-      } catch (err) {
-        console.log("System message error:", err);
-      }
-    };
-
-    // JOIN ROOM  (group or private)
-    socket.on("join_room", async ({ username, roomId }) => {
-      // if (socket.username) return;
+    /* USER ONLINE */
+    socket.on("user_online", (username) => {
       socket.username = username;
-      socket.roomId = roomId;
+      onlineUsers.set(socket.id, username);
+      io.emit("online_users", [...new Set(onlineUsers.values())]);
+    });
 
+    /* JOIN ROOM (SAFE, NO DUPLICATES) */
+    socket.on("join_room", async ({ username, roomId }) => {
       socket.join(roomId);
 
-      await saveAndBroadcastSystem(`${username} joined the chat`);
-    });
-
-    // Send Messages
-    socket.on("send_message", async (message) => {
-      try {
-        await Message.create({
-          username: message.username,
-          text: message.text,
-          type: "user",
-          room: message.roomId,
-        });
-
-        socket.to(message.roomId).emit("receive_message", message);
-      } catch (err) {
-        console.error("Message save error:", err);
+      // 🔒 track joined rooms per socket
+      if (!joinedRooms.has(socket.id)) {
+        joinedRooms.set(socket.id, new Set());
       }
-    });
 
-    //Typing Indicator
-    socket.on("typing", () => {
-      if (!socket.username || !socket.roomId) return;
+      // 🔥 IF USER ALREADY JOINED THIS ROOM → STOP
+      if (joinedRooms.get(socket.id).has(roomId)) {
+        return;
+      }
 
-      socket.to(socket.roomId).emit("user_typing", {
-        username: socket.username,
+      joinedRooms.get(socket.id).add(roomId);
+
+      const systemMessage = {
+        type: "system",
+        text: `${username} joined the chat`,
+        time: new Date().toLocaleTimeString(),
+        roomId,
+        actor: username,
+      };
+
+      await Message.create({
+        username: "system",
+        text: systemMessage.text,
+        type: "system",
+        room: roomId,
+        actor: username,
       });
+
+      // send ONLY to others
+      socket.to(roomId).emit("receive_message", systemMessage);
     });
 
-    socket.on("stop_typing", () => {
-      if (!socket.username || !socket.roomId) return;
+    /* SEND MESSAGE */
+    socket.on("send_message", async (message) => {
+      await Message.create({
+        username: message.username,
+        text: message.text,
+        type: "user",
+        room: message.roomId,
+      });
 
-      socket.to(socket.roomId).emit("user_stop_typing");
+      socket.to(message.roomId).emit("receive_message", message);
     });
 
-    // User Disconects
-    socket.on("disconnect", async () => {
-      if (!socket.username || !socket.roomId) return;
+    /* TYPING */
+    socket.on("typing", ({ roomId }) => {
+      if (!roomId || !socket.username) return;
+      socket.to(roomId).emit("user_typing", { username: socket.username });
+    });
 
-      await saveAndBroadcastSystem(`${socket.username} left the chat`);
+    socket.on("stop_typing", ({ roomId }) => {
+      if (!roomId) return;
+      socket.to(roomId).emit("user_stop_typing");
+    });
 
+    /* DISCONNECT */
+    socket.on("disconnect", () => {
+      onlineUsers.delete(socket.id);
+      joinedRooms.delete(socket.id);
+      io.emit("online_users", [...new Set(onlineUsers.values())]);
       console.log("User Disconnected:", socket.id);
     });
   });

@@ -1,17 +1,20 @@
-import { Routes, Route } from 'react-router-dom'
-import Login from "./pages/Login"
-import Chat from "./pages/Chat.jsx"
-import './App.css'
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Chat from "./pages/Chat";
+import { useChat } from "./context/ChatContext";
 
-function App() {
+const App = () => {
+  const { username } = useChat();
 
   return (
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route
+        path="/chat"
+        element={username ? <Chat /> : <Navigate to="/" />}
+      />
+    </Routes>
+  );
+};
 
-      <Routes>
-        <Route path='/' element={<Login />} />
-        <Route path='/chat' element={<Chat />} />
-      </Routes>
-  )
-}
-
-export default App
+export default App;

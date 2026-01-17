@@ -2,25 +2,24 @@ import React, { useState } from "react";
 import { useChat } from "../../context/ChatContext";
 import { socket } from "../../services/socket";
 
-let typingTimout
+let typingTimeout; // ✅ FIXED NAME
 
 const MessageInput = () => {
   const [text, setText] = useState("");
   const { addMessage, username, room } = useChat();
 
   const handleChange = (e) => {
-    setText(e.target.value)
+    setText(e.target.value);
 
-    if(!room) return
-    
-    socket.emit("typing")
-    
-    clearTimeout(typingTimout)
-    typingTimout =  setTimeout(() => {
-      socket.emit("stop_typing")
-    }, 1000);
+    if (!room) return;
 
-  }
+    socket.emit("typing", { roomId: room });
+
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      socket.emit("stop_typing", { roomId: room });
+    }, 800);
+  };
 
   const handleSend = () => {
     if (!text.trim() || !room) return;
@@ -33,14 +32,16 @@ const MessageInput = () => {
     };
 
     socket.emit("send_message", message);
-    socket.emit("stop_typing");
+
+    // ✅ ALWAYS send roomId
+    socket.emit("stop_typing", { roomId: room });
 
     addMessage({ ...message, self: true });
     setText("");
   };
 
   return (
-    <div className="p-3  border-t dark:border-gray-700 flex gap-2">
+    <div className="p-3 border-t dark:border-gray-700 flex gap-2">
       <input
         type="text"
         value={text}
