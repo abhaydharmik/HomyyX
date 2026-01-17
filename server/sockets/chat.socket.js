@@ -67,12 +67,17 @@ module.exports = (io) => {
     /* TYPING */
     socket.on("typing", ({ roomId }) => {
       if (!roomId || !socket.username) return;
-      socket.to(roomId).emit("user_typing", { username: socket.username });
+
+      socket.to(roomId).emit("user_typing", {
+        username: socket.username,
+        roomId,
+      });
     });
 
     socket.on("stop_typing", ({ roomId }) => {
       if (!roomId) return;
-      socket.to(roomId).emit("user_stop_typing");
+
+      socket.to(roomId).emit("user_stop_typing", { roomId });
     });
 
     /* DISCONNECT */

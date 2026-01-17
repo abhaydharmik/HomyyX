@@ -10,6 +10,7 @@ export const ChatProvider = ({ children }) => {
   const [typingUser, setTypingUser] = useState("");
   const [room, setRoom] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [lastMessages, setLastMessages] = useState({});
 
   /* 🔐 Load username */
   useEffect(() => {
@@ -38,7 +39,7 @@ export const ChatProvider = ({ children }) => {
             time: new Date(msg.createdAt).toLocaleTimeString(),
             self: msg.username === username,
             roomId: room,
-          }))
+          })),
         );
       } catch (error) {
         console.log("Failed to load messages:", error);
@@ -52,10 +53,7 @@ export const ChatProvider = ({ children }) => {
   const addMessage = (message) => {
     setMessages((prev) => {
       // 🔥 Ignore system messages triggered by self
-      if (
-        message.type === "system" &&
-        message.actor === username
-      ) {
+      if (message.type === "system" && message.actor === username) {
         return prev;
       }
 
@@ -66,7 +64,7 @@ export const ChatProvider = ({ children }) => {
           (m) =>
             m.type === "system" &&
             m.text === message.text &&
-            m.actor === message.actor
+            m.actor === message.actor,
         )
       ) {
         return prev;
@@ -104,6 +102,8 @@ export const ChatProvider = ({ children }) => {
         setRoom,
         onlineUsers,
         setOnlineUsers,
+        lastMessages,
+        setLastMessages,
       }}
     >
       {children}

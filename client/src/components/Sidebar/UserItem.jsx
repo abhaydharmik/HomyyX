@@ -3,7 +3,7 @@ import { useChat } from "../../context/ChatContext";
 import { socket } from "../../services/socket";
 
 const UserItem = ({ name, roomId, type }) => {
-  const { room, setRoom, username } = useChat();
+  const { room, setRoom, username, lastMessages } = useChat();
   const isActive = room === roomId;
 
   const initials = name.charAt(0).toUpperCase();
@@ -51,9 +51,10 @@ const UserItem = ({ name, roomId, type }) => {
       {/* Text */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{name}</p>
-        {type === "user" && (
-          <p className="text-xs text-green-500">Online</p>
-        )}
+        {type === "user" && <p className="text-xs text-green-500">Online</p>}
+        <p className="text-xs text-gray-400 truncate">
+          {lastMessages[roomId]?.text || "No messages yet"}
+        </p>
       </div>
     </div>
   );

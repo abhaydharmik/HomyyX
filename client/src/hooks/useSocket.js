@@ -9,6 +9,7 @@ const useSocket = () => {
     setTypingUser,
     room,
     setOnlineUsers,
+    setLastMessages,
   } = useChat();
 
   const connectedRef = useRef(false);
@@ -32,14 +33,46 @@ const useSocket = () => {
 
     socket.on("receive_message", (message) => {
       addMessage({ ...message, self: false });
+
+      setLastMessages((prev) => ({
+        ...prev,
+        [message.roomId]: {
+          text: message.text,
+          lastText: message.text,
+          sender: message.username,
+          isTyping: false,
+        },
+      }));
     });
 
-    socket.on("user_typing", ({ username }) => {
+    socket.on("user_typing", ({ username, roomId }) => {
       setTypingUser(username);
+
+      setLastMessages((prev) => ({
+        ...prev,
+        [roomId]: {
+          ...prev[roomId],
+          text: "Typing...",
+          isTyping: true,
+        },
+      }));
     });
 
-    socket.on("user_stop_typing", () => {
+    socket.on("user_stop_typing", ({ roomId }) => {
       setTypingUser("");
+
+      setLastMessages((prev) => {
+        if (!prev[roomId]) return prev;
+
+        return {
+          ...prev,
+          [roomId]: {
+            ...prev[roomId],
+            text: prev[roomId].lastText || "No messages yet",
+            isTyping: false,
+          },
+        };
+      });
     });
   }, [username]);
 
